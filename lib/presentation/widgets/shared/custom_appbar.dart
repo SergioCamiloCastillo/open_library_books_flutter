@@ -2,6 +2,7 @@ import 'package:bookstore_flutter/presentation/delegates/search_book_delegate.da
 import 'package:bookstore_flutter/presentation/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomAppbar extends ConsumerWidget {
   const CustomAppbar({super.key});
@@ -28,13 +29,20 @@ class CustomAppbar extends ConsumerWidget {
             GestureDetector(
               onTap: () {
                 final bookRepository = ref.read(bookRepositoryProvider);
+                final searchQuery = ref.read(searchQueryProvider);
                 print('hizo clcik aquii');
                 showSearch(
+                    query: searchQuery,
                     context: context,
-                    delegate: SearchBookDelegate(
-                        searchBooks: (query) =>
-                            bookRepository.searchBooks(query))).then((value) {
-                  print('miedaaaa');
+                    delegate: SearchBookDelegate(searchBooks: (query) {
+                      ref
+                          .read(searchQueryProvider.notifier)
+                          .update((state) => query);
+                      return bookRepository.searchBooks(query);
+                    })).then((book) {
+                  if (book == null) return;
+                  String bookId = extractIdentifierFromPath(book['key']);
+                  context.push('/book/$bookId/${book['cover_i']}');
                 });
               },
               child: Container(
@@ -72,5 +80,14 @@ class CustomAppbar extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+String extractIdentifierFromPath(String path) {
+  List<String> parts = path.split('/');
+  if (parts.length > 1) {
+    return parts.last;
+  } else {
+    throw ArgumentError('No identifier found in path');
   }
 }

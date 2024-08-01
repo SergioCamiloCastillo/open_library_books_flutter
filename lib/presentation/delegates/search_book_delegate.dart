@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bookstore_flutter/presentation/screens/screens.dart';
 import 'package:bookstore_flutter/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -72,11 +73,22 @@ class SearchBookDelegate extends SearchDelegate {
             itemCount: books!.length,
             itemBuilder: (context, index) {
               final book = books[index];
+
               return BooksSearchItem(
                   book: book,
                   onBookSelected: (context, book) {
-                    clearStreams();
-                    close(context, book);
+                    String bookId =
+                        extractIdentifierFromPath(book['key'].toString());
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookScreen(
+                          bookId: bookId,
+                          coverId: book['cover_i'].toString(),
+                          fromSearch: true,
+                        ),
+                      ),
+                    );
                   });
             },
           );

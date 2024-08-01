@@ -8,7 +8,13 @@ class BookScreen extends ConsumerStatefulWidget {
   static const name = 'book-screen';
   final String bookId;
   final String coverId;
-  const BookScreen({super.key, required this.bookId, required this.coverId});
+  final bool fromSearch;
+  const BookScreen({
+    super.key,
+    required this.bookId,
+    required this.coverId,
+    this.fromSearch = false,
+  });
 
   @override
   BookScreenState createState() => BookScreenState();
@@ -24,6 +30,7 @@ class BookScreenState extends ConsumerState<BookScreen> {
   @override
   Widget build(BuildContext context) {
     final book = ref.watch(bookInfoProvider)[widget.bookId];
+    print('el book id=>${widget.bookId}');
     if (book == null) {
       return const Scaffold(
         body: Center(
@@ -31,19 +38,28 @@ class BookScreenState extends ConsumerState<BookScreen> {
         ),
       );
     }
-    return Scaffold(
-      body: CustomScrollView(
-        physics: const ClampingScrollPhysics(),
-        slivers: [
-          _CustomSliverAppBar(book: book),
-          SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                _BookDetails(book: book),
-              ],
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        if (widget.fromSearch) {
+          Navigator.pop(context, true); // Indica que viene del `SearchDelegate`
+        }
+        return true; // Permite la navegación hacia atrás
+      },
+      child: Scaffold(
+        body: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            _CustomSliverAppBar(book: book),
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  _BookDetails(book: book),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

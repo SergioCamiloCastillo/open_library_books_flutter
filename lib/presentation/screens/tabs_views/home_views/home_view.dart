@@ -1,23 +1,11 @@
 import 'package:bookstore_flutter/presentation/providers/providers.dart';
+import 'package:bookstore_flutter/presentation/widgets/books/books_horizontal_listview.dart';
 import 'package:bookstore_flutter/presentation/widgets/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatelessWidget {
-  static const name = 'home-screen';
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: _HomeView(),
-      bottomNavigationBar: CustomNavigationBar(),
-    );
-  }
-}
-
-class _HomeView extends ConsumerStatefulWidget {
-  const _HomeView({
+class HomeView extends ConsumerStatefulWidget {
+  const HomeView({
     super.key,
   });
 
@@ -25,7 +13,7 @@ class _HomeView extends ConsumerStatefulWidget {
   _HomeViewState createState() => _HomeViewState();
 }
 
-class _HomeViewState extends ConsumerState<_HomeView> {
+class _HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();

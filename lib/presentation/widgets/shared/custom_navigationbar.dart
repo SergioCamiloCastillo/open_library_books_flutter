@@ -23,22 +23,6 @@ class CustomNavigationBar extends StatelessWidget {
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.search,
-                color: Color(0xFFACABAC),
-                size: 28,
-              ),
-              label: '', // Etiqueta vacía
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.bookmark_border_outlined,
-                color: Color(0xFFACABAC),
-                size: 28,
-              ),
-              label: '', // Etiqueta vacía
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
                 Icons.person_outline,
                 color: Color(0xFFACABAC),
                 size: 28,
