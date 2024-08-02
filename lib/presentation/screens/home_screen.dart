@@ -11,6 +11,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: childView,
+      extendBody: true,  // This line ensures the Scaffold body extends behind the navigation bar
       bottomNavigationBar: const CustomNavigationBar(),
     );
   }
