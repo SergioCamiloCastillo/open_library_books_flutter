@@ -58,6 +58,11 @@ class _HomeViewState extends ConsumerState<HomeView> {
             (context, index) {
               return Column(
                 children: [
+                  const InfoBox(
+                    message: 'Encuentra la información de tus libros aquí.',
+                    imagePath:
+                        'https://img.freepik.com/fotos-premium/libro-abierto-hojas-desplegadas-sobre-fondo-azul_76263-1659.jpg',
+                  ),
                   BooksHorizontalListView(
                     books: getScienceBooks,
                     titleCategory: 'Ciencia',
