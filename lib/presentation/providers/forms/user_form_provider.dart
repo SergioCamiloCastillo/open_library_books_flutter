@@ -1,10 +1,11 @@
 import 'package:bookstore_flutter/presentation/widgets/shared/infrastructure/inputs/inputs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:formz/formz.dart';
 
 final userFormProvider =
     StateNotifierProvider<UserFormNotifier, UserFormState>((ref) {
-  return UserFormNotifier();
+  return UserFormNotifier()..loadUserData();
 });
 
 class UserFormNotifier extends StateNotifier<UserFormState> {
@@ -42,15 +43,45 @@ class UserFormNotifier extends StateNotifier<UserFormState> {
     state = state.copyWith(gender: value);
   }
 
-  void updateIsSubmitted(bool isSubmitted) {
-    state = state.copyWith(isSubmitted: isSubmitted);
-  }
-
   Future<void> saveUserData() async {
     state = state.copyWith(isSaving: true);
-    await Future.delayed(const Duration(seconds: 2));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', state.name.value);
+    await prefs.setString('lastName', state.lastName.value);
+    await prefs.setString('phone', state.phone.value);
+    await prefs.setString('email', state.email.value);
+    await prefs.setString(
+        'birthDate', state.birthDate.value?.toIso8601String() ?? '');
+    await prefs.setInt('age', state.age);
+    await prefs.setString('gender', state.gender ?? '');
     state = state.copyWith(isSaving: false);
-    // Aquí puedes añadir la lógica para persistir los datos
+  }
+
+  Future<void> loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('name') ?? '';
+    final lastName = prefs.getString('lastName') ?? '';
+    final phone = prefs.getString('phone') ?? '';
+    final email = prefs.getString('email') ?? '';
+    final birthDateString = prefs.getString('birthDate') ?? '';
+    final birthDate =
+        birthDateString.isNotEmpty ? DateTime.parse(birthDateString) : null;
+    final age = prefs.getInt('age') ?? 0;
+    final gender = prefs.getString('gender');
+
+    state = state.copyWith(
+      name: Name.dirty(name),
+      lastName: LastName.dirty(lastName),
+      phone: Phone.dirty(phone),
+      email: Email.dirty(email),
+      birthDate: BirthDate.dirty(birthDate),
+      age: age,
+      gender: gender,
+    );
+  }
+
+  void updateIsSubmitted(bool isSubmitted) {
+    state = state.copyWith(isSubmitted: isSubmitted);
   }
 }
 
@@ -63,7 +94,7 @@ class UserFormState {
   final int age;
   final String? gender;
   final bool isSaving;
-  final bool isSubmitted; // Nueva propiedad para verificar si el formulario fue enviado
+  final bool isSubmitted;
 
   bool get isValid =>
       name.isValid &&
@@ -81,7 +112,7 @@ class UserFormState {
     this.age = 0,
     this.gender,
     this.isSaving = false,
-    this.isSubmitted = false, // Inicializa la propiedad
+    this.isSubmitted = false,
   });
 
   UserFormState copyWith({
@@ -93,7 +124,7 @@ class UserFormState {
     int? age,
     String? gender,
     bool? isSaving,
-    bool? isSubmitted, // Añade la propiedad en copyWith
+    bool? isSubmitted,
   }) {
     return UserFormState(
       name: name ?? this.name,
@@ -104,7 +135,7 @@ class UserFormState {
       age: age ?? this.age,
       gender: gender ?? this.gender,
       isSaving: isSaving ?? this.isSaving,
-      isSubmitted: isSubmitted ?? this.isSubmitted, // Actualiza la propiedad
+      isSubmitted: isSubmitted ?? this.isSubmitted,
     );
   }
 }

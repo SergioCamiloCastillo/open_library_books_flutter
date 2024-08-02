@@ -2,106 +2,124 @@ import 'package:bookstore_flutter/presentation/providers/forms/user_form_provide
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class UserScreen extends ConsumerWidget {
+class UserScreen extends ConsumerStatefulWidget {
   const UserScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  _UserScreenState createState() => _UserScreenState();
+}
+
+class _UserScreenState extends ConsumerState<UserScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _nameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _birthDateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _emailController = TextEditingController();
+    _birthDateController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userFormNotifier = ref.read(userFormProvider.notifier);
+      await userFormNotifier.loadUserData();
+      final formState = ref.read(userFormProvider);
+      if (mounted) {
+        setState(() {
+          _nameController.text = formState.name.value;
+          _lastNameController.text = formState.lastName.value;
+          _phoneController.text = formState.phone.value;
+          _emailController.text = formState.email.value;
+          _birthDateController.text = formState.birthDate.value != null
+              ? formState.birthDate.value!.toLocal().toString().split(' ')[0]
+              : '';
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _birthDateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final formState = ref.watch(userFormProvider);
     final formNotifier = ref.read(userFormProvider.notifier);
-
-    final birthDateController = TextEditingController(
-      text: formState.birthDate.value != null
-          ? formState.birthDate.value!.toLocal().toString().split(' ')[0]
-          : '',
-    );
-
     final size = MediaQuery.of(context).size;
-    final formKey = GlobalKey<FormState>();
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xFFF8EFEB), Color(0xFFE4E3FC)],
-              ),
+        preferredSize: const Size.fromHeight(56.0), // Ajusta la altura del AppBar
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Color(0xFFF8EFEB), Color(0xFFE4E3FC)],
             ),
           ),
-          title: const Text('Módulo de Usuario'),
+          child: AppBar(
+            title: const Text('Módulo de Usuario',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+            backgroundColor: Colors.transparent, // Hacer el color de fondo transparente
+            elevation: 0, // Quitar la sombra del AppBar
+            toolbarHeight: 56.0, // Ajusta la altura del AppBar si es necesario
+          ),
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: SingleChildScrollView(
           child: Form(
-            key: formKey,
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.disabled, // Cambia la validación automática
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: _buildTextFormField(
-                    context,
-                    label: 'Nombre',
-                    initialValue: formState.name.value,
-                    errorText: formState.isSubmitted && !formState.name.isValid
-                        ? 'Nombre inválido'
-                        : null,
-                    onChanged: (value) => formNotifier.updateName(value),
-                    isSubmitted: formState.isSubmitted,
-                  ),
+                const SizedBox(height: 20.0),
+                _buildTextFormField(
+                  label: 'Nombre',
+                  controller: _nameController,
+                  errorText: formState.name.isNotValid ? 'Nombre inválido' : null,
+                  onChanged: formNotifier.updateName,
                 ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: _buildTextFormField(
-                    context,
-                    label: 'Apellido',
-                    initialValue: formState.lastName.value,
-                    errorText:
-                        formState.isSubmitted && !formState.lastName.isValid
-                            ? 'Apellido inválido'
-                            : null,
-                    onChanged: (value) => formNotifier.updateLastName(value),
-                    isSubmitted: formState.isSubmitted,
-                  ),
+                const SizedBox(height: 10.0),
+                _buildTextFormField(
+                  label: 'Apellido',
+                  controller: _lastNameController,
+                  errorText: formState.lastName.isNotValid ? 'Apellido inválido' : null,
+                  onChanged: formNotifier.updateLastName,
                 ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: _buildTextFormField(
-                    context,
-                    label: 'Teléfono',
-                    initialValue: formState.phone.value,
-                    keyboardType: TextInputType.number,
-                    errorText: formState.isSubmitted && !formState.phone.isValid
-                        ? 'Teléfono inválido'
-                        : null,
-                    onChanged: (value) => formNotifier.updatePhone(value),
-                    isSubmitted: formState.isSubmitted,
-                  ),
+                const SizedBox(height: 10.0),
+                _buildTextFormField(
+                  label: 'Teléfono',
+                  controller: _phoneController,
+                  keyboardType: TextInputType.number,
+                  errorText: formState.phone.isNotValid ? 'Teléfono inválido' : null,
+                  onChanged: formNotifier.updatePhone,
                 ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: _buildTextFormField(
-                    context,
-                    label: 'Correo Electrónico',
-                    initialValue: formState.email.value,
-                    errorText: formState.isSubmitted && !formState.email.isValid
-                        ? 'Correo electrónico inválido'
-                        : null,
-                    onChanged: (value) => formNotifier.updateEmail(value),
-                    isSubmitted: formState.isSubmitted,
-                  ),
+                const SizedBox(height: 10.0),
+                _buildTextFormField(
+                  label: 'Correo Electrónico',
+                  controller: _emailController,
+                  errorText: formState.email.isNotValid ? 'Correo electrónico inválido' : null,
+                  onChanged: formNotifier.updateEmail,
                 ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: 10.0),
                 GestureDetector(
                   onTap: () async {
                     DateTime? selectedDate = await showDatePicker(
@@ -111,102 +129,89 @@ class UserScreen extends ConsumerWidget {
                       lastDate: DateTime.now(),
                     );
                     formNotifier.updateBirthDate(selectedDate);
-                    birthDateController.text = selectedDate != null
+                    _birthDateController.text = selectedDate != null
                         ? selectedDate.toLocal().toString().split(' ')[0]
                         : '';
                   },
                   child: AbsorbPointer(
-                    child: SizedBox(
-                      width: size.width * 0.9,
-                      child: _buildTextFormField(
-                        context,
-                        label: 'Fecha de Nacimiento',
-                        controller: birthDateController,
-                        errorText: formState.isSubmitted &&
-                                !formState.birthDate.isValid
-                            ? 'Fecha de nacimiento inválida'
-                            : null,
-                        onChanged: (_) {},
-                        isSubmitted: formState.isSubmitted,
-                      ),
+                    child: _buildTextFormField(
+                      label: 'Fecha de Nacimiento',
+                      controller: _birthDateController,
+                      errorText: formState.birthDate.isNotValid ? 'Fecha de nacimiento inválida' : null,
+                      onChanged: (_) {},
                     ),
                   ),
                 ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: 10.0),
                 Text(
                   'Edad: ${formState.age}',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: DropdownButtonFormField<String>(
-                    value: formState.gender,
-                    decoration: const InputDecoration(
-                      labelText: 'Género',
-                      border: OutlineInputBorder(),
+                const SizedBox(height: 10.0),
+                _buildGenderDropdown(formState, formNotifier),
+                const SizedBox(height: 25.0),
+                Container(
+                  width: size.width * 1,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [Color(0xFFF8EFEB), Color(0xFFE4E3FC)],
                     ),
-                    items: ['Masculino', 'Femenino', 'Otro']
-                        .map((gender) => DropdownMenuItem(
-                              value: gender,
-                              child: Text(gender),
-                            ))
-                        .toList(),
-                    onChanged: (value) => formNotifier.updateGender(value),
+                    borderRadius: BorderRadius.circular(25.0),
                   ),
-                ),
-                const SizedBox(height: 30.0),
-                SizedBox(
-                  width: size.width * 0.9,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      formNotifier.updateIsSubmitted(true);
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        formNotifier.updateName(_nameController.text);
+                        formNotifier.updateLastName(_lastNameController.text);
+                        formNotifier.updatePhone(_phoneController.text);
+                        formNotifier.updateEmail(_emailController.text);
+                        formNotifier.updateBirthDate(DateTime.tryParse(_birthDateController.text));
 
-                      if (formKey.currentState?.validate() ?? false) {
-                        if (formState.isValid) {
-                          await formNotifier.saveUserData();
+                        formNotifier.updateIsSubmitted(true);
+
+                        // Valida el formulario solo al hacer clic en el botón
+                        if (_formKey.currentState?.validate() ?? false) {
+                          try {
+                            await formNotifier.saveUserData();
+                            await formNotifier.loadUserData();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Datos guardados exitosamente.'),
+                              ),
+                            );
+                          } catch (e) {
+                            print('Error al guardar los datos: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al guardar los datos: $e'),
+                              ),
+                            );
+                          }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text(
-                                  'Por favor, corrige los errores en el formulario.'),
+                              content: Text('Por favor, corrige los errores en el formulario.'),
                             ),
                           );
                         }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Por favor, completa todos los campos requeridos.'),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Ink(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFFF8EFEB), Color(0xFFE4E3FC)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent, // El color de fondo no se muestra porque se usa el gradiente
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        alignment: Alignment.center,
-                        child: formState.isSaving
-                            ? const CircularProgressIndicator()
-                            : const Text(
-                                'Guardar Información',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                      ),
+                      child: formState.isSaving
+                          ? const CircularProgressIndicator()
+                          : const Text(
+                              'Guardar Información',
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ),
                 ),
@@ -218,24 +223,20 @@ class UserScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTextFormField(
-    BuildContext context, {
+  Widget _buildTextFormField({
     required String label,
-    String? initialValue,
+    required TextEditingController controller,
     String? errorText,
-    TextEditingController? controller,
     TextInputType? keyboardType,
     required void Function(String) onChanged,
-    required bool isSubmitted,
   }) {
     return TextFormField(
       controller: controller,
-      initialValue: initialValue,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
-        errorText: isSubmitted && errorText != null ? errorText : null,
+        errorText: errorText,
         filled: true,
         fillColor: Colors.grey[200],
         contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -244,6 +245,34 @@ class UserScreen extends ConsumerWidget {
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Este campo es obligatorio';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildGenderDropdown(
+    UserFormState formState,
+    UserFormNotifier formNotifier,
+  ) {
+    return DropdownButtonFormField<String>(
+      value: formState.gender,
+      decoration: const InputDecoration(
+        labelText: 'Género',
+        border: OutlineInputBorder(),
+      ),
+      items: ['Masculino', 'Femenino', 'Otro']
+          .map((gender) => DropdownMenuItem(
+                value: gender,
+                child: Text(gender),
+              ))
+          .toList(),
+      onChanged: (value) {
+        formNotifier.updateGender(value ?? '');
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Selecciona un género';
         }
         return null;
       },
